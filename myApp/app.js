@@ -11,7 +11,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/',function(req,res){
-  res.render('home');
+  res.render('login');
 });
 app.get('/registration',function(req,res){
   res.render('registration');
@@ -61,4 +61,59 @@ else{
     console.log(`running on localhost: ${port}`);
   });
 }
+//Mongo Database
+import {MongoClient} from "mongodb";
 
+const url ="mongodb://localhost:27017/";
+
+const dbName = "db";
+const dbUrl =`${url}${dbName}`;
+MongoClient.connect(dbUrl, function(err,db){
+  console.log("Connected to database")
+  db.close();
+});  
+
+function createCollection(collectionName){
+  url.connect(function(err,db){
+    if(err) throw err;
+    let currentDB =db.db(dbName);
+    currentDB.listCollections({name: collectionName}).next(function(err, collectionInfo){
+      if(collectionInfo){
+        console.log(`Collection with the name ${collectionName} already exists` );
+        db.close();
+      }else{
+        currentDB.createCollection(collectionName,function(err,res){
+          if(err) throw err;
+          console.log(`Collection created with the name ${collectionName}`);
+          db.close();
+        })
+      }
+    });
+    
+  });
+}
+function addDocument(collectionName,document){
+  try{
+    url.connect(function(err,db){
+      if(err) throw err;
+      let currentDB =db.db(dbName);
+      currentDB.listCollections({name: collectionName}).next(function(err, collectionInfo){
+        if(collectionInfo){
+          currentDB.collection(collectionName).insertOne(document,function(){
+            console.log(`Document ${document} Inserted`);
+            db.close();
+          });
+        }else{
+          console.log(`Collection ${collectionName} doesn't exist`);
+          db.close();
+        }
+      });
+      
+    });
+  }catch(err){
+    console.log(`Error: ${err}`);
+  }
+}
+
+
+createCollection("db","Accounts");
