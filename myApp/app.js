@@ -64,9 +64,12 @@ MongoClient.connect(`${url}${dbName}`, function(err,db){
   db.close();
 });  
 
-client = new MongoClient(url);
+function getCLient(){
+  return new MongoClient(url);
+}
+
 function createCollection(collectionName){
-  client.connect(function(err,db){
+  getCLient().connect(function(err,db){
     if(err) throw err;
     let currentDB =db.db(dbName);
     currentDB.listCollections({name: collectionName}).next(function(err, collectionInfo){
@@ -75,7 +78,7 @@ function createCollection(collectionName){
         db.close();
       }else{
         currentDB.createCollection(collectionName,function(err,res){
-          if(err) throw err;
+          
           console.log(`Collection created with the name ${collectionName}`);
           db.close();
         });
@@ -84,8 +87,9 @@ function createCollection(collectionName){
     
   });
 }
+createCollection("Accounts");
 function deleteCollection(collectionName){
-  client.connect(function(err,db){
+  getCLient().connect(function(err,db){
     if(err) throw err;
     let currentDB =db.db(dbName);
     currentDB.listCollections({name: collectionName}).next(function(err, collectionInfo){
@@ -105,15 +109,47 @@ function deleteCollection(collectionName){
 }
 function addDocument(collectionName,document){
   try{
-    client.connect(function(err,db){
-      if(err) throw err;
+    getCLient().connect(async function(err,db){
+      
+      let currentDB =db.db(dbName);
+      currentDB.listCollections({name: collectionName}).next(async function(err, collectionInfo){
+        if(collectionInfo){
+         
+          let user=await currentDB.collection(collectionName).countDocuments({id:document.id});
+          console.log(await user);
+          if(await user==0){
+            currentDB.collection(collectionName).insertOne(document,function(){
+              console.log(`Document  Inserted`);
+              db.close();
+            });
+          }else{
+            console.log("User already exists");
+            db.close();
+          }
+          
+        }else{
+          console.log(`Collection ${collectionName} doesn't exist`);
+          db.close();
+        }
+        
+      });
+      
+    });
+  }catch(err){
+    console.log(`Error: ${err}`);
+  }
+}
+function deleteDocument(collectionName,document){
+  try{
+    getCLient().connect(function(err,db){
+      
       let currentDB =db.db(dbName);
       currentDB.listCollections({name: collectionName}).next(function(err, collectionInfo){
         if(collectionInfo){
-          currentDB.collection(collectionName).insertOne(document,function(){
-            console.log(`Document ${document} Inserted`);
-            db.close();
-          });
+         currentDB.collection(collectionName).deleteOne(document,function(){
+          console.log(`Document ${document} was successfully deleted`);
+          db.close();
+         });
         }else{
           console.log(`Collection ${collectionName} doesn't exist`);
           db.close();
@@ -125,27 +161,17 @@ function addDocument(collectionName,document){
     console.log(`Error: ${err}`);
   }
 }
-function deleteDocument(collectionName,document){
-  try{
-    client.connect(function(err,db){
-      if(err) throw err;
-      let currentDB =db.db(dbName);
-      currentDB.listCollections({name: collectionName}).next(function(err, collectionInfo){
-        if(collectionInfo){
-         currentDB.collection(collectionName).deleteOne(document,function(){
-          console.log(`Document ${document} was successfully deleted`);
-          db.close();
-         });
-        }else{
-          console.log(`document ${document} doesn't exist`);
-          db.close();
-        }
-      });
-      
-    });
-  }catch(err){
-    console.log(`Error: ${err}`);
-  }
-}
 
-createCollection("Accounts");
+app.post('/Register',function(req,res){
+  const data = req.body;
+  const user = {id:data.username,pass:data.password,list:[]};
+  addDocument("Accounts",user);
+  res.render('login');
+});
+app.post('/Register',function(req,res){
+  const data = req.body;
+  let result = space
+  const user = {id:data.username,pass:data.password,list:[]};
+  addDocument("Accounts",user);
+  res.render('login');
+});
