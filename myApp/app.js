@@ -49,32 +49,24 @@ app.get('/santorini',function(req,res){
 });
 
 const port =3000;
-if(procoss.env.PORT){
-  app.listen(procoss.env.PORT , function (){
-    console.log("server running"); 
-    console.log(`running on localhost: ${procoss.env.PORT}`);
-  });
-}
-else{
+
   app.listen(port , function (){
     console.log("server running"); 
     console.log(`running on localhost: ${port}`);
   });
-}
+
 //Mongo Database
-import {MongoClient} from "mongodb";
-
-const url ="mongodb://localhost:27017/";
-
-const dbName = "db";
-const dbUrl =`${url}${dbName}`;
-MongoClient.connect(dbUrl, function(err,db){
+const MongoClient =require('mongodb').MongoClient;
+const url ="mongodb://127.0.0.1/";
+const dbName="db";
+MongoClient.connect(`${url}${dbName}`, function(err,db){
   console.log("Connected to database")
   db.close();
 });  
 
+client = new MongoClient(url);
 function createCollection(collectionName){
-  url.connect(function(err,db){
+  client.connect(function(err,db){
     if(err) throw err;
     let currentDB =db.db(dbName);
     currentDB.listCollections({name: collectionName}).next(function(err, collectionInfo){
@@ -86,7 +78,26 @@ function createCollection(collectionName){
           if(err) throw err;
           console.log(`Collection created with the name ${collectionName}`);
           db.close();
-        })
+        });
+      }
+    });
+    
+  });
+}
+function deleteCollection(collectionName){
+  client.connect(function(err,db){
+    if(err) throw err;
+    let currentDB =db.db(dbName);
+    currentDB.listCollections({name: collectionName}).next(function(err, collectionInfo){
+      if(collectionInfo){
+        currentDB.collection(collectionName).drop(function(err,res){
+          console.log(`Collection with the name ${collectionName} was deleted Successfully` );
+          db.close();
+        });
+        
+      }else{
+        console.log(`Collection with the name ${collectionName} doesn't exist`);
+        db.close();
       }
     });
     
@@ -94,7 +105,7 @@ function createCollection(collectionName){
 }
 function addDocument(collectionName,document){
   try{
-    url.connect(function(err,db){
+    client.connect(function(err,db){
       if(err) throw err;
       let currentDB =db.db(dbName);
       currentDB.listCollections({name: collectionName}).next(function(err, collectionInfo){
@@ -114,6 +125,27 @@ function addDocument(collectionName,document){
     console.log(`Error: ${err}`);
   }
 }
+function deleteDocument(collectionName,document){
+  try{
+    client.connect(function(err,db){
+      if(err) throw err;
+      let currentDB =db.db(dbName);
+      currentDB.listCollections({name: collectionName}).next(function(err, collectionInfo){
+        if(collectionInfo){
+         currentDB.collection(collectionName).deleteOne(document,function(){
+          console.log(`Document ${document} was successfully deleted`);
+          db.close();
+         });
+        }else{
+          console.log(`document ${document} doesn't exist`);
+          db.close();
+        }
+      });
+      
+    });
+  }catch(err){
+    console.log(`Error: ${err}`);
+  }
+}
 
-
-createCollection("db","Accounts");
+createCollection("Accounts");
