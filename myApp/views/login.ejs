@@ -32,6 +32,18 @@
         <h1>Welcome</h1>
     </div>
     <div class="cont">
+        <% if(success.length >0) { %>
+            <% console.log(success) %>
+            <div class="alert alert-success" style="width : 400px">
+                <%= success %>        
+            </div>
+        <% } %>
+        <% if(error.length >0) { %>
+            <% console.log(error) %>
+            <div class="alert alert-danger" style="width : 400px">
+                <%= error %>        
+            </div>
+        <% } %>
         <form method="POST">
             Username:<br>
             <input type="text" name="username">
