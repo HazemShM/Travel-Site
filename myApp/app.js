@@ -13,129 +13,141 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(session({ secret: "abcdefghazem1234", resave: false, saveUninitialized: false }));
+app.use(session({ secret: "abcdefghazem1234", resave: false, saveUninitialized: true }));
 app.use(flash());
+
+function requireLogin(req, res, next) {
+  if (!req.session.user) {
+    req.flash('error', 'Please login first');
+    res.redirect('/');
+  } else {
+    next();
+  }
+};
+app.get('/wanttogo', requireLogin, function (req, res) {
+  if (req.session.user.wanttogo) {
+    res.render('wanttogo', { destinations: req.session.user.wanttogo });
+  } else {
+    res.render('wanttogo' );
+  }
+
+});
+app.post('/wanttogo', function (req, res) {
+  const destination = req.body.destination;
+  console.log(destination);
+  const user = req.session.user;
+  if(user.wanttogo && user.wanttogo.includes(destination)) {
+    console.log('destination is already in the list');
+  }else {
+    if (user.username != "admin") {
+      getCLient().connect(function (err, db) {
+        if (err) throw err;
+        let currentDB = db.db(dbName);
+        currentDB.collection(collection).updateOne({ username: user.username }, {$push: { wanttogo: destination } });
+        console.log('added '+destination+' to wanttogo list');
+      });
+    }
+    if (req.session.user.wanttogo) {
+      req.session.user.wanttogo.push(destination);
+      console.log(req.session.user.wanttogo);
+    } else {
+      req.session.user.wanttogo =[];
+      req.session.user.wanttogo.push(destination);
+    }
+  }
+  res.redirect(destination);
+});
+
+app.post('/search', async function (req, res) {
+  const search = await req.body.Search;
+  const destinations = ['annapurna', 'inca', 'santorini', 'bali', 'paris', 'rome'];
+
+  let results = [];
+
+  for (let i = 0; i < destinations.length; i++) {
+
+    if (destinations[i].includes(search)) {
+      results.push(destinations[i]);
+    }
+  }
+  if (results.length === 0) {
+    req.flash('notfound', 'Destination not found');
+    res.render('searchresults', { notfound: req.flash('notfound') });
+  } else {
+    res.render('searchresults', { results });
+  }
+});
+// app.get('/searchresults',requireLogin , function(req,res){
+//   res.render('searchresults');
+// });
 
 
 //Home Page
-app.get('/home', function (req, res) {
-  // console.log(req.session.user);
+
+app.get('/bali', requireLogin, function (req, res) {
+  console.log('I am in bali');
+  res.render('bali');
+
+});
+
+app.get('/home', requireLogin, function (req, res) {
   console.log('I am in Home');
-  if (!req.session.user) {
+  res.render('home');
 
-    req.flash("error", "Please Login First");
-    res.redirect('/');
-    //return res.status(401).send();
-  } else {
-    res.render('home');
-  }
 });
 
-app.get('/hiking', function (req, res) {
+app.get('/hiking', requireLogin, function (req, res) {
   console.log('I am in Hiking');
-  if (!req.session.user) {
-    req.flash("error", "Please Login First");
-    res.redirect('/');
-    //return res.status(401).send();
-  } else {
-    res.render('hiking');
-  }
+  res.render('hiking');
+
 });
-app.get('/cities', function (req, res) {
+app.get('/cities', requireLogin, function (req, res) {
   console.log('I am in cities');
-  if (!req.session.user) {
-    req.flash("error", "Please Login First");
-    res.redirect('/');
-    //return res.status(401).send();
-  } else {
-    res.render('cities');
-  }
+  res.render('cities');
+
 });
-app.get('/islands', function (req, res) {
+app.get('/islands', requireLogin, function (req, res) {
   console.log('I am in islands');
-  if (!req.session.user) {
-    req.flash("error", "Please Login First");
-    res.redirect('/');
-  } else {
-    res.render('islands');
-  }
+  res.render('islands');
+
 });
 //hiking page
-app.get('/inca', function (req, res) {
+app.get('/inca', requireLogin, function (req, res) {
   console.log('I am in inca');
-  if (!req.session.user) {
-    req.flash("error", "Please Login First");
-    res.redirect('/');
-    //return res.status(401).send();
-  } else {
-    res.render('inca');
-  }
+  res.render('inca');
+
 
 });
-app.get('/annapurna', function (req, res) {
+app.get('/annapurna', requireLogin, function (req, res) {
   console.log('I am in annapurna');
-  if (!req.session.user) {
-    req.flash("error", "Please Login First");
-    res.redirect('/');
-    //return res.status(401).send();
-  } else {
-    res.render('annapurna');
-  }
+  res.render('annapurna');
+
 
 });
 
-app.get('/paris', function (req, res) {
+app.get('/paris', requireLogin, function (req, res) {
   console.log('I am in paris');
-  if (!req.session.user) {
-    req.flash("error", "Please Login First");
-    res.redirect('/');
-  } else {
-    res.render('paris');
-  }
+  res.render('paris');
+
 
 });
-app.get('/rome', function (req, res) {
+app.get('/rome', requireLogin, function (req, res) {
   console.log('I am in rome');
-  if (!req.session.user) {
-    req.flash("error", "Please Login First");
-    res.redirect('/');
-  } else {
-    res.render('rome');
-  }
+  res.render('rome');
+
 
 });
-
-app.get('/bali', function (req, res) {
-  console.log('I am in bali');
-  if (!req.session.user) {
-    req.flash("error", "Please Login First");
-    res.redirect('/');
-
-  } else {
-    res.render('bali');
-  }
-});
-app.get('/santorini', function (req, res) {
+app.get('/santorini', requireLogin, function (req, res) {
   console.log('I am in santorini');
-  if (!req.session.user) {
-    req.flash("error", "Please Login First");
-    res.redirect('/');
-    //return res.status(401).send();
-  } else {
-    res.render('santorini');
-  }
+  res.render('santorini');
+
 
 });
 //want to go list
-app.get('/wanttogo', function (req, res) {
+app.get('/wanttogo', requireLogin, function (req, res) {
   console.log('I am in wanttogo');
-  if (!req.session.user) {
-    req.flash("error", "Please Login First");
-    res.redirect('/');
-    //return res.status(401).send();
-  } else {
-    res.render('wanttogo');
-  }
+  res.render('wanttogo');
+
 
 });
 
@@ -315,57 +327,84 @@ app.post('/Register', function (req, res) {
 
 app.post('/', function (req, res) {
   const data = req.body;
-  const user = { username: data.username, password: data.password, wanttogo: data.wanttogo };
-  if (data.username == 'admin') {
-    if (data.password != 'admin') {
-      console.log('Wrong Password');
-    } else {
-      console.log("Logged in successfully");
-      req.session.user = user;
-      res.redirect('/home');
+  const user = { username: data.username, password: data.password };
+  let tempUser = '';
+  let tempPass = '';
+  for (let i = 0; i < data.username.length || i < data.password.length; i++) {
+    if (i < data.username.length && data.username.charAt(i) != ' ') {
+      tempUser += data.username.charAt(i);
     }
+    if (i < data.password.length && data.password.charAt(i) != ' ') {
+      tempPass += data.password.charAt(i);
+    }
+  }
+  if (tempUser == '' || tempPass == '') {
+    req.flash("error", "Please Enter Correct Username and Password");
+    res.redirect('/');
   } else {
-    getCLient().connect(async function (err, db) {
-      if (err) throw err;
-      let currentDB = db.db(dbName);
-      let usernameFound = await currentDB.collection(collection).countDocuments({ username: user.username });
-      if (await usernameFound == 0) {
-        console.log('This username is not registered');
+    if (data.username == 'admin') {
+      if (data.password != 'admin') {
+        console.log('Wrong Password');
+        req.flash("error", "Wrong Password");
+        res.redirect('/');
       } else {
-        let correctPassword = await currentDB.collection(collection).countDocuments({ username: user.username, password: user.password });
-        if (await correctPassword == 0) {
-          console.log('Wrong Password');
-        } else {
-          console.log("Logged in successfully");
-          req.session.user = user;
-          res.redirect('/home');
-
-        }
+        console.log("Logged in successfully");
+        req.session.user = user;
+        res.redirect('/home');
       }
-      db.close();
+    } else {
+      getCLient().connect(async function (err, db) {
+        if (err) throw err;
+        let currentDB = db.db(dbName);
+        let usernameFound = await currentDB.collection(collection).countDocuments({ username: user.username });
+        if (await usernameFound == 0) {
+          console.log('This username is not registered');
+          req.flash("error", "This username is not registered");
+          res.redirect('/');
+        } else {
+          let correctPassword = await currentDB.collection(collection).countDocuments({ username: user.username, password: user.password });
+          if (await correctPassword == 0) {
+            console.log('Wrong Password');
+            req.flash("error", "Wrong Password");
+            res.redirect('/');
+          }else {
+            console.log("Logged in successfully");
+            await currentDB.collection(collection).findOne(user, function(err, doc){
+              if (err) throw err;
+              const wanttogo = doc.wanttogo
+              console.log(wanttogo);
+              req.session.user = { username: data.username, password: data.password , wanttogo: wanttogo };
+              res.redirect('/home');
+            });
 
-    });
-  }
+          }
+        }
+        //db.close();
 
-});
-app.post('/bali', function (req, res) {
-  let user = req.session.user;
-  let flag = false;
-  for (let i = 0; i < user.wanttogo.length; i++) {
-    if (wanttogo[i] == 'bali') {
-      flag = true;
+      });
     }
   }
-  if (flag) {
-    console.log('already exists in the wanttogo list');
-  } else {
-    getCLient().connect(function (err, db) {
-      if (err) throw err;
-      let currentDB = db.db(dbName);
-      currentDB.collection(collection).updateOne({ username: user.username }, { $push: { wanttogo: 'bali' } });
-      console.log('added bali to wanttogo list')
-      db.close();
-    });
-    req.session.user.wanttogo.push('bali');
-  }
+
 });
+
+// app.post('/bali', function (req, res) {
+//   let user = req.session.user;
+//   let flag = false;
+//   for (let i = 0; i < user.wanttogo.length; i++) {
+//     if (wanttogo[i] == 'bali') {
+//       flag = true;
+//     }
+//   }
+//   if (flag) {
+//     console.log('already exists in the wanttogo list');
+//   } else {
+//     getCLient().connect(function (err, db) {
+//       if (err) throw err;
+//       let currentDB = db.db(dbName);
+//       currentDB.collection(collection).updateOne({ username: user.username }, { $push: { wanttogo: 'bali' } });
+//       console.log('added bali to wanttogo list')
+//       db.close();
+//     });
+//     req.session.user.wanttogo.push('bali');
+//   }
+// });

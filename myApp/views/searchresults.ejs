@@ -13,6 +13,14 @@
             text-align: center;
             -webkit-text-stroke: 1px blue;
         }
+        ul{
+            position:relative;
+            left:200px;
+            top:50px;
+        }
+        li {
+            font-size: 40px;
+        }
     </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,5 +46,22 @@
             </form>
         </div>
     </nav>
+    <ul>
+    <% if(!locals.results && notfound.length >0 ) { %>
+         <% console.log(notfound) %>
+        <div class="alert alert-warning" style="width : 400px">
+            <%= notfound %>        
+        </div>
+    <% } %>
+    <%if (locals.results) { %>
+        <% for (let i = 0; i < results.length; i++) { %>
+        <li>
+          <a href= <%= results[i].toLowerCase() %>>
+            <%= results[i] %>
+          </a>
+        </li>
+        <% } %>
+    <% } %>
+    </ul>
 </body>
 </html>
