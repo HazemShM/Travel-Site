@@ -15,7 +15,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({ secret: "abcdefghazem1234", resave: false, saveUninitialized: true }));
 app.use(flash());
-
+let adminList =[];
 function requireLogin(req, res, next) {
   if (!req.session.user) {
     req.flash('error', 'Please login first');
@@ -47,13 +47,9 @@ app.post('/wanttogo', function (req, res) {
         console.log('added '+destination+' to wanttogo list');
       });
     }
-    if (req.session.user.wanttogo) {
-      req.session.user.wanttogo.push(destination);
-      console.log(req.session.user.wanttogo);
-    } else {
-      req.session.user.wanttogo =[];
-      req.session.user.wanttogo.push(destination);
-    }
+    console.log(req.session.user.wanttogo);
+    req.session.user.wanttogo.push(destination);
+    
   }
   res.redirect(destination);
 });
@@ -177,7 +173,7 @@ app.get('/Register', function (req, res) {
 });
 
 //setting up the server
-const port = 3000;
+const port = process.env.PORT || 3000;;
 
 app.listen(port, function () {
   console.log("server running");
@@ -349,7 +345,7 @@ app.post('/', function (req, res) {
         res.redirect('/');
       } else {
         console.log("Logged in successfully");
-        req.session.user = user;
+        req.session.user = { username: data.username, password: data.password , wanttogo: adminList };
         res.redirect('/home');
       }
     } else {
