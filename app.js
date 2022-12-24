@@ -38,6 +38,8 @@ app.post('/wanttogo', function (req, res) {
   const user = req.session.user;
   if(user.wanttogo && user.wanttogo.includes(destination)) {
     console.log('destination is already in the list');
+    req.flash("error", "This Destination is already in your list");
+    res.redirect(destination);
   }else {
     if (user.username != "admin") {
       getCLient().connect(function (err, db) {
@@ -49,9 +51,9 @@ app.post('/wanttogo', function (req, res) {
     }
     console.log(req.session.user.wanttogo);
     req.session.user.wanttogo.push(destination);
-    
+    res.redirect(destination);
   }
-  res.redirect(destination);
+  
 });
 
 app.post('/search', async function (req, res) {
@@ -80,11 +82,7 @@ app.post('/search', async function (req, res) {
 
 //Home Page
 
-app.get('/bali', requireLogin, function (req, res) {
-  console.log('I am in bali');
-  res.render('bali');
 
-});
 
 app.get('/home', requireLogin, function (req, res) {
   console.log('I am in Home');
@@ -110,33 +108,37 @@ app.get('/islands', requireLogin, function (req, res) {
 //hiking page
 app.get('/inca', requireLogin, function (req, res) {
   console.log('I am in inca');
-  res.render('inca');
+  res.render('inca',{error: req.flash('error')});
 
 
 });
 app.get('/annapurna', requireLogin, function (req, res) {
   console.log('I am in annapurna');
-  res.render('annapurna');
+  res.render('annapurna',{error: req.flash('error')});
 
 
 });
 
 app.get('/paris', requireLogin, function (req, res) {
   console.log('I am in paris');
-  res.render('paris');
+  res.render('paris',{error: req.flash('error')});
 
 
 });
 app.get('/rome', requireLogin, function (req, res) {
   console.log('I am in rome');
-  res.render('rome');
+  res.render('rome',{error: req.flash('error')});
 
+
+});
+app.get('/bali', requireLogin, function (req, res) {
+  console.log('I am in bali');
+  res.render('bali',{error: req.flash('error')});
 
 });
 app.get('/santorini', requireLogin, function (req, res) {
   console.log('I am in santorini');
-  res.render('santorini');
-
+  res.render('santorini',{error: req.flash('error')});
 
 });
 //want to go list
@@ -291,6 +293,7 @@ app.post('/Register', function (req, res) {
                 db.close();
               });
               console.log('I am in Register and finished registering');
+              req.flash("success", "You have registered successfully");
               res.redirect('/');
             } else {
 

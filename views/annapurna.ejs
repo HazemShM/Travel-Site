@@ -80,6 +80,12 @@
             <input type="hidden" name="destination" value="annapurna">
             <button type="submit" id="wanttogo" class="btn btn-secondary ml-3">Add to Want-to-Go List</button>
         </form>
+        <% if(error.length >0) { %>
+            <% console.log(error) %>
+            <div class="alert alert-danger" style="width : 400px">
+                <%= error %>        
+            </div>
+        <% } %>
     </div>
     <div class="video">
         <iframe width="480" height="360" src="https://www.youtube.com/embed/Jpv-D6vX-Vk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
